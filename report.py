@@ -33,7 +33,7 @@ def print_header(title):
 
 
 def print_footer():
-    print('\n\n')
+    print('\n')
 
 
 # Establish the DB connection

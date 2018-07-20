@@ -50,7 +50,6 @@ cursor = db.cursor()
 
 # Create views
 
-print('\n')
 print('Creating views...')
 
 cursor.execute(CREATE_VIEW_PAGE_VIEWS_QUERY)
@@ -58,7 +57,6 @@ cursor.execute(CREATE_VIEW_ARTICLE_VIEWS_QUERY)
 cursor.execute(CREATE_VIEW_ARTICLE_AUTHORS_VIEWS_QUERY)
 cursor.execute(CREATE_VIEW_HITS_BY_DAY_QUERY)
 
-print('\n')
 print('Created views!')
 
 # Commit DB changes
