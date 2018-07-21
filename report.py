@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import psycopg2
 
@@ -27,63 +27,120 @@ DAYS_WITH_HIGH_ERROR_RATE_QUERY = \
 # Define utility functions
 
 def print_header(title):
+    '''
+    Prints a section header
+    '''
     print('\n')
     print(title)
-    print('---------------------------------------------------')
+    print('-' * len(title))
 
 
 def print_footer():
+    '''
+    Prints a section footer
+    '''
     print('\n')
 
 
-# Establish the DB connection
+def db_connect():
+    '''
+    Creates and returns a connection to the database defined by DB_NAME,
+    as well as a cursor for the database.
 
-db = psycopg2.connect(database=DB_NAME)
-cursor = db.cursor()
+    Returns:
+    db, cursor - a tuple. The first element is a connection to the database.
+            The second element is a cursor for the database.
+    '''
 
-# Fetch & print top 3 articles
+    db = psycopg2.connect(database=DB_NAME)
+    cursor = db.cursor()
 
-print('\n')
-print('Fetching top 3 articles of all time...')
+    return db, cursor
 
-cursor.execute(TOP_THREE_ARTICLES_QUERY)
-articles = cursor.fetchall()
+def db_disconnect(db):
+    '''
+    Closes the database connection
+    
+    Args:
+    db - the database connection
+    '''
+    db.close()
 
-print_header('Top 3 Articles of All Time')
 
-for article in articles:
-    print('"{}" - {} views'.format(article[0], article[1]))
+def execute_query(cursor, query):
+    '''
+    Executes the SQL query and returns the results as a list of tuples.
 
-print_footer()
+    Args:
+    cursor - the database cursor
+    query - an SQL query statement to be executed.
 
-# Fetch & print top article authors
+    Returns:
+    A list of tuples containing the results of the query.
+    '''
 
-print('Fetching top article authors of all time...')
+    cursor.execute(query)
+    results = cursor.fetchall()
+    return results
 
-cursor.execute(TOP_ARTICLE_AUTHORS_QUERY)
-authors = cursor.fetchall()
 
-print_header('Top Article Authors of All Time')
+def print_top_articles(cursor):
+    '''
+    Prints out the top 3 articles of all time.
 
-for author in authors:
-    print('{} - {} views'.format(author[0], author[1]))
+    Args:
+    cursor - the database cursor
+    '''
 
-print_footer()
+    print('Fetching top 3 articles of all time...')
 
-# Fetch & print days with high error rates
+    articles = execute_query(cursor, TOP_THREE_ARTICLES_QUERY)
+        
+    print_header('Top 3 Articles of All Time')
 
-print('Fetching days with high error rates...')
+    for title, views in articles:
+        print('"{}" - {} views'.format(title, views))
+    
+    print_footer()
 
-cursor.execute(DAYS_WITH_HIGH_ERROR_RATE_QUERY)
-days = cursor.fetchall()
 
-print_header('Days with High Error Rates')
+def print_top_authors(cursor):
+    '''
+    Prints a list of authors ranked by article views.
+    '''
 
-for day in days:
-    print('{} - {}% errors'.format(day[0], round(day[1] * 100, 1)))
+    print('Fetching top article authors of all time...')
 
-print_footer()
+    authors = execute_query(cursor, TOP_ARTICLE_AUTHORS_QUERY)
+        
+    print_header('Top Article Authors of All Time')
 
-# Close the DB connection
+    for name, views in authors:
+        print('{} - {} views'.format(name, views))
+    
+    print_footer()
 
-db.close()
+
+def print_days_with_high_error_rates(cursor):
+    '''
+    Prints out the days where more than 1% of logged access requests were errors.
+    '''
+    
+    print('Fetching days with high error rates...')
+
+    days = execute_query(cursor, DAYS_WITH_HIGH_ERROR_RATE_QUERY)
+        
+    print_header('Days with High Error Rates')
+
+    for day, error_rate in days:
+        print('{} - {:.1%} errors'.format(day, error_rate))
+    
+    print_footer()
+
+if __name__ == '__main__':
+    print('\n')
+    db, cursor = db_connect()
+    print_top_articles(cursor)
+    print_top_authors(cursor)
+    print_days_with_high_error_rates(cursor)
+    db_disconnect(db)
